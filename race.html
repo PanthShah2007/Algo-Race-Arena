@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Race — Algorithm Race Arena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="race.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark">AR</span> Algorithm Race Arena</a>
+    <a class="back-link" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      All races
+    </a>
+    <button class="theme-toggle" data-theme-toggle aria-label="Toggle light/dark theme"></button>
+  </div>
+</nav>
+
+<header class="shell race-hero">
+  <div class="eyebrow" id="raceCategory">CATEGORY</div>
+  <h1 class="matchup-title" id="matchupTitle">A <span class="vs">vs</span> B</h1>
+  <p class="tagline" id="raceTagline">Tagline</p>
+  <div class="matchup-nav">
+    <a class="btn" id="prevRace" href="#">← Previous race</a>
+    <a class="btn btn-primary" href="#arena">Watch live race ↓</a>
+    <a class="btn" id="nextRace" href="#">Next race →</a>
+  </div>
+</header>
+
+<main class="shell">
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Meet the Racers</div>
+      <h2>How each one thinks.</h2>
+    </div>
+    <div class="racers-grid">
+      <article class="racer-card a">
+        <div class="racer-head"><span class="racer-dot"></span><h3 id="nameA">Racer A</h3></div>
+        <p class="desc" id="descA"></p>
+        <div class="steps-label">How it works</div>
+        <ol class="steps-list" id="stepsA"></ol>
+        <table class="complexity-table" id="complexityA"></table>
+        <div class="best-for"><b>Best used for</b><span id="bestForA"></span></div>
+      </article>
+      <article class="racer-card b">
+        <div class="racer-head"><span class="racer-dot"></span><h3 id="nameB">Racer B</h3></div>
+        <p class="desc" id="descB"></p>
+        <div class="steps-label">How it works</div>
+        <ol class="steps-list" id="stepsB"></ol>
+        <table class="complexity-table" id="complexityB"></table>
+        <div class="best-for"><b>Best used for</b><span id="bestForB"></span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="arena">
+    <div class="section-head">
+      <div class="eyebrow">Live Race</div>
+      <h2>Watch them run.</h2>
+      <p>Both racers work on the exact same input, generated fresh each run. Press start and watch each step happen in real time.</p>
+    </div>
+
+    <div class="panel arena-panel">
+      <div class="metric-chips">
+        <span class="metric-chip">⏱ Time = real measured execution time for this run</span>
+        <span class="metric-chip">🔢 Comparisons = real operation count</span>
+        <span class="metric-chip">💾 Memory = theoretical auxiliary space</span>
+      </div>
+      <div class="arena-controls">
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnStart">▶ Start Race</button>
+          <button class="btn" id="btnPause" disabled>⏸ Pause</button>
+          <button class="btn" id="btnReset">⟲ New Scenario</button>
+        </div>
+        <div class="speed-control">
+          Speed
+          <input type="range" id="speedSlider" min="1" max="4" step="1" value="2">
+          <span id="speedLabel">1×</span>
+        </div>
+      </div>
+
+      <div class="lane a">
+        <div class="lane-head">
+          <div class="lane-name"><span class="racer-dot"></span><span id="laneNameA">Racer A</span></div>
+          <div class="lane-stats">
+            <span>Comparisons: <b id="statCompA">0</b></span>
+            <span>Time: <b id="statTimeA">—</b></span>
+            <span>Memory: <b id="statMemA">—</b></span>
+          </div>
+        </div>
+        <div class="lane-canvas-wrap">
+          <canvas id="canvasA"></canvas>
+          <div class="lane-badge" id="badgeA">🏁 FINISHED</div>
+        </div>
+      </div>
+
+      <div class="lane b">
+        <div class="lane-head">
+          <div class="lane-name"><span class="racer-dot"></span><span id="laneNameB">Racer B</span></div>
+          <div class="lane-stats">
+            <span>Comparisons: <b id="statCompB">0</b></span>
+            <span>Time: <b id="statTimeB">—</b></span>
+            <span>Memory: <b id="statMemB">—</b></span>
+          </div>
+        </div>
+        <div class="lane-canvas-wrap">
+          <canvas id="canvasB"></canvas>
+          <div class="lane-badge" id="badgeB">🏁 FINISHED</div>
+        </div>
+      </div>
+
+      <div class="result-banner" id="resultBanner"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Complexity</div>
+      <h2>How the gap grows with input size.</h2>
+      <p id="chartCaption">Estimated operation counts as input size n increases — this is why one algorithm pulls ahead as the workload gets bigger.</p>
+    </div>
+    <div class="panel panel-pad">
+      <div class="chart-wrap"><canvas id="complexityChart"></canvas></div>
+      <div class="chart-legend">
+        <span><i id="legendDotA"></i><span id="legendNameA"></span></span>
+        <span><i id="legendDotB"></i><span id="legendNameB"></span></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="eyebrow">Reference Code</div>
+      <h2>The implementation, in C++.</h2>
+    </div>
+    <div class="code-grid">
+      <div class="code-card a">
+        <div class="code-card-head"><span id="codeNameA"></span><button class="copy-btn" data-copy="A">Copy</button></div>
+        <pre id="codeA"></pre>
+      </div>
+      <div class="code-card b">
+        <div class="code-card-head"><span id="codeNameB"></span><button class="copy-btn" data-copy="B">Copy</button></div>
+        <pre id="codeB"></pre>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer shell">
+  <div class="footer-inner">
+    <div>Built by <strong>Panth Shah</strong> — Algorithm Race Arena, 2026.</div>
+    <div class="social-row">
+      <a href="https://www.linkedin.com/in/panth-shah-445144389" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/PanthShah2007" target="_blank" rel="noopener">GitHub</a>
+      <a href="mailto:panthshah2007@gmail.com">panthshah2007@gmail.com</a>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="theme.js"></script>
+<script src="algorithms-data.js"></script>
+<script src="visualizer.js"></script>
+<script src="race.js"></script>
+</body>
+</html>
