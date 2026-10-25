@@ -8,6 +8,97 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="landing.css">
+<style>
+  /* Playback telemetry controller styling */
+  .hero-playback-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 8px 16px;
+    border-radius: 999px;
+    margin: 1.25rem 0 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  }
+  .ctrl-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+  .ctrl-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .ctrl-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .speed-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+  .speed-ctrl input[type="range"] {
+    accent-color: #06b6d4;
+    cursor: pointer;
+    width: 90px;
+  }
+  /* Roster filtering controls */
+  .roster-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+  .roster-search {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: #f8fafc;
+    font-size: 0.9rem;
+    outline: none;
+    min-width: 240px;
+  }
+  .roster-search:focus {
+    border-color: #06b6d4;
+  }
+  .category-filter-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .filter-chip.active, .filter-chip:hover {
+    background: rgba(6, 182, 212, 0.15);
+    color: #06b6d4;
+    border-color: rgba(6, 182, 212, 0.35);
+  }
+</style>
 </head>
 <body>
 
@@ -17,7 +108,7 @@
     <div class="nav-links">
       <a href="#roster">Race Roster</a>
       <a href="#about">About</a>
-      <a href="https://github.com/PanthShah2007" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/PanthShah2007/Algo-Race-Arena" target="_blank" rel="noopener">GitHub</a>
     </div>
     <button class="theme-toggle" data-theme-toggle aria-label="Toggle light/dark theme"></button>
   </div>
@@ -30,6 +121,22 @@
     <div class="hero-eyebrow"><span class="dot-a"></span> LIVE TELEMETRY <span class="dot-b"></span> 10 MATCHUPS · 7 CATEGORIES</div>
     <h1>Algorithm<br><span class="grad">Race</span> <span class="vs">×</span> Arena</h1>
     <p class="hero-sub">Ten classic algorithm rivalries, run side by side in real time. Watch every comparison, every swap, every step — then read the theory, the complexity math, and the code behind the win.</p>
+    
+    <!-- Hero Playback Controller Bar -->
+    <div class="hero-playback-bar">
+      <button id="btnHeroPlayPause" class="ctrl-btn" title="Toggle animation play/pause">
+        <span id="heroPlayIcon">⏸</span> <span id="heroPlayText">Pause Canvas</span>
+      </button>
+      <button id="btnHeroStep" class="ctrl-btn" disabled title="Step one frame forward">
+        ⏭ Step
+      </button>
+      <div class="speed-ctrl">
+        <span>Speed</span>
+        <input type="range" id="heroSpeedSlider" min="0.25" max="3" step="0.25" value="1">
+        <span id="heroSpeedLabel">1.0x</span>
+      </div>
+    </div>
+
     <div class="hero-actions">
       <a href="#roster" class="btn btn-primary">Enter the Arena ↓</a>
       <a href="race.html?id=dijkstra-astar" class="btn">Start with Dijkstra vs A*</a>
@@ -77,6 +184,15 @@
       <h2>Pick a rivalry.</h2>
       <p>Every card below opens a full race page: live animation, complexity graphs, plain-English explanations, and reference C++ implementations for both competitors.</p>
     </div>
+
+    <!-- Filter & Search Controls -->
+    <div class="roster-controls">
+      <input type="text" id="rosterSearchInput" class="roster-search" placeholder="Search algorithms (e.g. Dijkstra, Sort, Tree)...">
+      <div class="category-filter-chips" id="categoryChips">
+        <button class="filter-chip active" data-category="ALL">All Categories</button>
+      </div>
+    </div>
+
     <div class="roster-grid" id="rosterGrid"></div>
   </section>
 
@@ -98,30 +214,113 @@
 <script src="algorithms-data.js"></script>
 <script>
   const grid = document.getElementById('rosterGrid');
+  const searchInput = document.getElementById('rosterSearchInput');
+  const categoryChips = document.getElementById('categoryChips');
   const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-  ARENA_DATA.forEach((race, i)=>{
-    const bars = Array.from({length:8}, ()=> `<i style="height:${8+Math.random()*20}px"></i>`).join('');
-    const card = document.createElement('a');
-    card.href = `race.html?id=${race.id}`;
-    card.className = 'race-card';
-    card.innerHTML = `
-      <div class="mini-bars">${bars}</div>
-      <div class="race-card-top">
-        <span class="race-num">RACE ${String(i+1).padStart(2,'0')}</span>
-        <span class="race-tag">${race.category}</span>
-      </div>
-      <div class="race-matchup">
-        <span class="a">${race.racerA.short}</span><span class="vs">vs</span><span class="b">${race.racerB.short}</span>
-      </div>
-      <p class="race-desc">${race.tagline}</p>
-      <div class="race-cta">Watch the race ${arrow}</div>
-    `;
-    card.addEventListener('mousemove', e=>{
-      const r = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX-r.left)+'px');
-      card.style.setProperty('--my', (e.clientY-r.top)+'px');
+
+  let activeCategory = 'ALL';
+  let searchQuery = '';
+
+  // 1. Build Category Chips dynamically
+  const categories = ['ALL', ...new Set(ARENA_DATA.map(r => r.category))];
+  categoryChips.innerHTML = categories.map(cat => 
+    `<button class="filter-chip ${cat === 'ALL' ? 'active' : ''}" data-category="${cat}">${cat === 'ALL' ? 'All Categories' : cat}</button>`
+  ).join('');
+
+  categoryChips.addEventListener('click', (e) => {
+    if (e.target.classList.contains('filter-chip')) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      activeCategory = e.target.getAttribute('data-category');
+      renderRoster();
+    }
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderRoster();
+  });
+
+  // 2. Render Roster Grid with filters applied
+  function renderRoster() {
+    grid.innerHTML = '';
+    const filtered = ARENA_DATA.filter(race => {
+      const matchCat = activeCategory === 'ALL' || race.category === activeCategory;
+      const matchQuery = !searchQuery || 
+        race.racerA.name.toLowerCase().includes(searchQuery) ||
+        race.racerB.name.toLowerCase().includes(searchQuery) ||
+        race.racerA.short.toLowerCase().includes(searchQuery) ||
+        race.racerB.short.toLowerCase().includes(searchQuery) ||
+        race.tagline.toLowerCase().includes(searchQuery) ||
+        race.category.toLowerCase().includes(searchQuery);
+      return matchCat && matchQuery;
     });
-    grid.appendChild(card);
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #94a3b8;">No matching algorithm rivalries found.</div>`;
+      return;
+    }
+
+    filtered.forEach((race, i) => {
+      const bars = Array.from({length:8}, ()=> `<i style="height:${8+Math.random()*20}px"></i>`).join('');
+      const card = document.createElement('a');
+      card.href = `race.html?id=${race.id}`;
+      card.className = 'race-card';
+      card.innerHTML = `
+        <div class="mini-bars">${bars}</div>
+        <div class="race-card-top">
+          <span class="race-num">RACE ${String(i+1).padStart(2,'0')}</span>
+          <span class="race-tag">${race.category}</span>
+        </div>
+        <div class="race-matchup">
+          <span class="a">${race.racerA.short}</span><span class="vs">vs</span><span class="b">${race.racerB.short}</span>
+        </div>
+        <p class="race-desc">${race.tagline}</p>
+        <div class="race-cta">Watch the race ${arrow}</div>
+      `;
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX-r.left)+'px');
+        card.style.setProperty('--my', (e.clientY-r.top)+'px');
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  renderRoster();
+
+  // 3. Hook Hero Background Controls to heroGraph
+  const btnHeroPlayPause = document.getElementById('btnHeroPlayPause');
+  const btnHeroStep = document.getElementById('btnHeroStep');
+  const heroSpeedSlider = document.getElementById('heroSpeedSlider');
+  const heroSpeedLabel = document.getElementById('heroSpeedLabel');
+  const heroPlayIcon = document.getElementById('heroPlayIcon');
+  const heroPlayText = document.getElementById('heroPlayText');
+
+  let heroIsPaused = false;
+
+  btnHeroPlayPause.addEventListener('click', () => {
+    heroIsPaused = !heroIsPaused;
+    if (window.setHeroAnimationPaused) {
+      window.setHeroAnimationPaused(heroIsPaused);
+    }
+    heroPlayIcon.textContent = heroIsPaused ? '▶' : '⏸';
+    heroPlayText.textContent = heroIsPaused ? 'Resume Canvas' : 'Pause Canvas';
+    btnHeroStep.disabled = !heroIsPaused;
+  });
+
+  btnHeroStep.addEventListener('click', () => {
+    if (heroIsPaused && window.stepHeroAnimationFrame) {
+      window.stepHeroAnimationFrame();
+    }
+  });
+
+  heroSpeedSlider.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    heroSpeedLabel.textContent = `${val.toFixed(2)}x`;
+    if (window.setHeroAnimationSpeed) {
+      window.setHeroAnimationSpeed(val);
+    }
   });
 </script>
 </body>
